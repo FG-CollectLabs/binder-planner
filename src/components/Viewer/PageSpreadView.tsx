@@ -35,6 +35,7 @@ function ViewGrid({
                 className={`rounded-sm overflow-hidden ${isToploader ? 'border-2 border-gray-700' : 'border border-gray-700/40'} ${!content ? 'bg-gray-700/20' : ''}`}
                 style={{
                   gridColumn: content?.colSpan === 2 ? 'span 2' : undefined,
+                  gridRow: content?.rowSpan === 2 ? 'span 2' : undefined,
                   aspectRatio: content ? undefined : '2.5/3.5',
                 }}
               >

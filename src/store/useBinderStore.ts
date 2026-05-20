@@ -4,7 +4,7 @@ import type {
   BinderLayout, BinderPage, LibraryItem, SlotValue,
   PocketLayout, BinderType,
 } from '../types/binder'
-import { LAYOUT_SLOT_COUNT, isMerged, isContent } from '../types/binder'
+import { LAYOUT_COLS, LAYOUT_SLOT_COUNT, isMerged, isContent } from '../types/binder'
 import { saveBinder, saveLibraryItem, deleteLibraryItem } from './storage'
 
 interface BinderStore {
@@ -23,7 +23,7 @@ interface BinderStore {
   // slot editing
   placeItem: (pageId: string, slotIndex: number, itemId: string) => void
   removeItem: (pageId: string, slotIndex: number) => void
-  toggleSpan: (pageId: string, slotIndex: number) => void
+  cycleSpan: (pageId: string, slotIndex: number) => void
   moveItem: (fromPageId: string, fromSlot: number, toPageId: string, toSlot: number) => void
 
   // library
@@ -72,7 +72,7 @@ export const useBinderStore = create<BinderStore>((set, _get) => ({
     const pages = s.binder.pages.map(p => {
       if (p.id !== pageId) return p
       const slots = [...p.slots]
-      slots[slotIndex] = { itemId, colSpan: 1 }
+      slots[slotIndex] = { itemId, colSpan: 1, rowSpan: 1 }
       return { ...p, slots }
     })
     const binder = persist({ ...s.binder, pages })
@@ -81,13 +81,15 @@ export const useBinderStore = create<BinderStore>((set, _get) => ({
 
   removeItem: (pageId, slotIndex) => set(s => {
     if (!s.binder) return s
-    const cols = LAYOUT_SLOT_COUNT[s.binder.pocketLayout]
+    const cols = LAYOUT_COLS[s.binder.pocketLayout]
+    const total = LAYOUT_SLOT_COUNT[s.binder.pocketLayout]
     const pages = s.binder.pages.map(p => {
       if (p.id !== pageId) return p
       const slots = [...p.slots]
       const slot = slots[slotIndex]
-      if (isContent(slot) && slot.colSpan === 2 && slotIndex + 1 < cols) {
-        slots[slotIndex + 1] = null
+      if (isContent(slot)) {
+        if (slot.colSpan === 2 && slotIndex + 1 < total) slots[slotIndex + 1] = null
+        if (slot.rowSpan === 2 && slotIndex + cols < total) slots[slotIndex + cols] = null
       }
       slots[slotIndex] = null
       return { ...p, slots }
@@ -96,34 +98,56 @@ export const useBinderStore = create<BinderStore>((set, _get) => ({
     return { binder }
   }),
 
-  toggleSpan: (pageId, slotIndex) => set(s => {
+  // Cycles through 3 span states: single (1×1) → wide (2×1) → tall (1×2) → single
+  cycleSpan: (pageId, slotIndex) => set(s => {
     if (!s.binder) return s
-    const colCount = parseInt(s.binder.pocketLayout.split('-')[0]) // unused, use LAYOUT_COLS
-    void colCount
+    const cols = LAYOUT_COLS[s.binder.pocketLayout]
+    const total = LAYOUT_SLOT_COUNT[s.binder.pocketLayout]
+    const rows = total / cols
+
     const pages = s.binder.pages.map(p => {
       if (p.id !== pageId) return p
       const slots = [...p.slots]
       const slot = slots[slotIndex]
       if (!isContent(slot)) return p
 
-      const layout = s.binder!.pocketLayout
-      const cols = LAYOUT_SLOT_COUNT[layout] === 4 ? 2 : layout === '9-pocket' ? 3 : 4
       const col = slotIndex % cols
-      const nextIdx = slotIndex + 1
+      const row = Math.floor(slotIndex / cols)
 
-      if (slot.colSpan === 1) {
-        // expand to 2 if next slot in same row is free
+      if (slot.colSpan === 1 && slot.rowSpan === 1) {
+        // single → wide: expand right if next slot in same row is free
+        const nextIdx = slotIndex + 1
         if (col < cols - 1 && (slots[nextIdx] === null || isMerged(slots[nextIdx]))) {
-          slots[slotIndex] = { ...slot, colSpan: 2 }
+          slots[slotIndex] = { ...slot, colSpan: 2, rowSpan: 1 }
           slots[nextIdx] = { mergedFrom: slotIndex }
         }
-      } else {
-        // collapse back to 1
-        slots[slotIndex] = { ...slot, colSpan: 1 }
-        if (nextIdx < slots.length && isMerged(slots[nextIdx])) {
-          slots[nextIdx] = null
+        // if can't go wide, try tall instead
+        else {
+          const belowIdx = slotIndex + cols
+          if (row < rows - 1 && (slots[belowIdx] === null || isMerged(slots[belowIdx]))) {
+            slots[slotIndex] = { ...slot, colSpan: 1, rowSpan: 2 }
+            slots[belowIdx] = { mergedFrom: slotIndex }
+          }
         }
+      } else if (slot.colSpan === 2) {
+        // wide → tall: clear col merge, try row merge
+        const nextIdx = slotIndex + 1
+        if (nextIdx < total && isMerged(slots[nextIdx])) slots[nextIdx] = null
+        const belowIdx = slotIndex + cols
+        if (row < rows - 1 && (slots[belowIdx] === null || isMerged(slots[belowIdx]))) {
+          slots[slotIndex] = { ...slot, colSpan: 1, rowSpan: 2 }
+          slots[belowIdx] = { mergedFrom: slotIndex }
+        } else {
+          // can't go tall — collapse to single
+          slots[slotIndex] = { ...slot, colSpan: 1, rowSpan: 1 }
+        }
+      } else {
+        // tall → single: clear row merge
+        const belowIdx = slotIndex + cols
+        if (belowIdx < total && isMerged(slots[belowIdx])) slots[belowIdx] = null
+        slots[slotIndex] = { ...slot, colSpan: 1, rowSpan: 1 }
       }
+
       return { ...p, slots }
     })
     const binder = persist({ ...s.binder, pages })
@@ -139,10 +163,14 @@ export const useBinderStore = create<BinderStore>((set, _get) => ({
       const slots = [...p.slots]
       const slot = slots[fromSlot]
       if (!isContent(slot)) return p
-      draggedContent = { ...slot, colSpan: 1 } // reset span on move
-      // clear merged next slot if was spanning
-      if (slot.colSpan === 2 && isMerged(slots[fromSlot + 1])) {
+      draggedContent = { ...slot, colSpan: 1, rowSpan: 1 } // reset span on move
+      const cols = LAYOUT_COLS[s.binder!.pocketLayout]
+      const total = LAYOUT_SLOT_COUNT[s.binder!.pocketLayout]
+      if (slot.colSpan === 2 && fromSlot + 1 < total && isMerged(slots[fromSlot + 1])) {
         slots[fromSlot + 1] = null
+      }
+      if (slot.rowSpan === 2 && fromSlot + cols < total && isMerged(slots[fromSlot + cols])) {
+        slots[fromSlot + cols] = null
       }
       slots[fromSlot] = null
       return { ...p, slots }

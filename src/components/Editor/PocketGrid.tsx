@@ -12,7 +12,7 @@ interface Props {
 
 export function PocketGrid({ page, binder, library, label }: Props) {
   const removeItem = useBinderStore(s => s.removeItem)
-  const toggleSpan = useBinderStore(s => s.toggleSpan)
+  const cycleSpan = useBinderStore(s => s.cycleSpan)
   const cols = LAYOUT_COLS[binder.pocketLayout]
 
   return (
@@ -42,8 +42,9 @@ export function PocketGrid({ page, binder, library, label }: Props) {
                 content={content}
                 item={item}
                 colSpan={content?.colSpan ?? 1}
+                rowSpan={content?.rowSpan ?? 1}
                 onRemove={() => removeItem(page.id, idx)}
-                onToggleSpan={() => toggleSpan(page.id, idx)}
+                onCycleSpan={() => cycleSpan(page.id, idx)}
                 isToploader={binder.binderType === 'toploader'}
               />
             )
