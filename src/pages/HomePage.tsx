@@ -4,9 +4,11 @@ import type { BinderLayout } from '../types/binder'
 import { getBinders, deleteBinder } from '../store/storage'
 import { importBinder } from '../store/exportImport'
 import { BinderCard } from '../components/Home/BinderCard'
+import { useExtensionBridge } from '../hooks/useExtensionBridge'
 
 export function HomePage() {
   const navigate = useNavigate()
+  useExtensionBridge()
   const [binders, setBinders] = useState<BinderLayout[]>([])
   const [importError, setImportError] = useState<string | null>(null)
   const importRef = useRef<HTMLInputElement>(null)
