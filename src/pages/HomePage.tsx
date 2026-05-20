@@ -1,16 +1,32 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { BinderLayout } from '../types/binder'
 import { getBinders, deleteBinder } from '../store/storage'
+import { importBinder } from '../store/exportImport'
 import { BinderCard } from '../components/Home/BinderCard'
 
 export function HomePage() {
   const navigate = useNavigate()
   const [binders, setBinders] = useState<BinderLayout[]>([])
+  const [importError, setImportError] = useState<string | null>(null)
+  const importRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     getBinders().then(setBinders)
   }, [])
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    try {
+      const binder = await importBinder(file)
+      navigate(`/binder/${binder.id}/edit`)
+    } catch {
+      setImportError('Could not import — make sure it\'s a valid binder JSON file.')
+      setTimeout(() => setImportError(null), 4000)
+    }
+  }
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this binder?')) return
@@ -35,13 +51,29 @@ export function HomePage() {
             <h1 className="text-3xl font-bold text-white tracking-tight">Binder Planner</h1>
             <p className="text-gray-400 mt-1 text-sm">Design michi-style binder displays for your collection</p>
           </div>
-          <button
-            onClick={() => navigate('/new')}
-            className="bg-purple-600 hover:bg-purple-500 text-white font-medium px-5 py-2.5 rounded-xl transition-colors flex items-center gap-2"
-          >
-            <span className="text-lg leading-none">+</span> New Binder
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => importRef.current?.click()}
+              className="bg-gray-700 hover:bg-gray-600 text-white font-medium px-4 py-2.5 rounded-xl transition-colors text-sm"
+              title="Import a binder from a JSON file"
+            >
+              Import
+            </button>
+            <input ref={importRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
+            <button
+              onClick={() => navigate('/new')}
+              className="bg-purple-600 hover:bg-purple-500 text-white font-medium px-5 py-2.5 rounded-xl transition-colors flex items-center gap-2"
+            >
+              <span className="text-lg leading-none">+</span> New Binder
+            </button>
+          </div>
         </div>
+
+        {importError && (
+          <div className="mb-4 bg-red-900/50 border border-red-700 text-red-300 text-sm px-4 py-3 rounded-xl">
+            {importError}
+          </div>
+        )}
 
         {binders.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
