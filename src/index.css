@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #111827;
+  color: #f9fafb;
+  font-family: system-ui, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+/* Page turn animation for viewer */
+@keyframes pageFlipRight {
+  from { transform: perspective(1200px) rotateY(0deg); opacity: 1; }
+  to   { transform: perspective(1200px) rotateY(-90deg); opacity: 0; }
+}
+
+@keyframes pageFlipIn {
+  from { transform: perspective(1200px) rotateY(90deg); opacity: 0; }
+  to   { transform: perspective(1200px) rotateY(0deg); opacity: 1; }
+}
+
+.page-flip-out {
+  animation: pageFlipRight 0.25s ease-in forwards;
+}
+
+.page-flip-in {
+  animation: pageFlipIn 0.25s ease-out forwards;
+}
+
+/* Drag overlay */
+.drag-overlay {
+  cursor: grabbing !important;
+  opacity: 0.85;
+  transform: scale(1.05);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
