@@ -22,7 +22,7 @@ function ViewGrid({
       <div className={`flex-1 rounded-xl p-3 ${isToploader ? 'bg-gray-950 border-2 border-gray-700' : 'bg-gray-800 border border-gray-700'}`}>
         <div
           className="grid gap-2 h-full"
-          style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
+          style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, gridAutoRows: '1fr' }}
         >
           {page.slots.map((slot, idx) => {
             if (isMerged(slot)) return null
@@ -36,7 +36,7 @@ function ViewGrid({
                 style={{
                   gridColumn: content?.colSpan === 2 ? 'span 2' : undefined,
                   gridRow: content?.rowSpan === 2 ? 'span 2' : undefined,
-                  aspectRatio: content ? undefined : '2.5/3.5',
+                  aspectRatio: undefined,
                 }}
               >
                 {item && (

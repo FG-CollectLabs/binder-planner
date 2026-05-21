@@ -26,7 +26,7 @@ export function PocketGrid({ page, binder, library, label }: Props) {
       >
         <div
           className="grid gap-2 h-full"
-          style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
+          style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, gridAutoRows: '1fr' }}
         >
           {page.slots.map((slot, idx) => {
             if (isMerged(slot)) return null

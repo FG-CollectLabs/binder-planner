@@ -106,7 +106,7 @@ export function PocketSlot({ pageId, slotIndex, content, item, colSpan, rowSpan,
   }
 
   return (
-    <div ref={setNodeRef} className={baseClass} style={{ aspectRatio: '2.5/3.5' }}>
+    <div ref={setNodeRef} className={baseClass}>
       {isOver && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-purple-400 text-2xl">+</div>
