@@ -81,7 +81,7 @@ export function PocketSlot({ pageId, slotIndex, content, item, colSpan, rowSpan,
   }
 
   const baseClass = `
-    relative rounded-sm transition-all
+    relative rounded-sm transition-all overflow-hidden
     ${isToploader ? 'border-2 border-gray-600' : 'border border-gray-600/50'}
     ${isOver && !content ? 'border-purple-400 bg-purple-900/30 scale-[1.02]' : ''}
     ${!content ? 'bg-gray-700/40 hover:bg-gray-700/60' : ''}

@@ -1,5 +1,5 @@
 import type { BinderPage, BinderLayout, LibraryItem } from '../../types/binder'
-import { LAYOUT_COLS, isContent, isMerged } from '../../types/binder'
+import { LAYOUT_COLS, LAYOUT_SLOT_COUNT, isContent, isMerged } from '../../types/binder'
 
 interface Props {
   leftPage: BinderPage | undefined
@@ -14,15 +14,16 @@ function ViewGrid({
   page, binder, library, label,
 }: { page: BinderPage; binder: BinderLayout; library: LibraryItem[]; label: string }) {
   const cols = LAYOUT_COLS[binder.pocketLayout]
+  const rows = LAYOUT_SLOT_COUNT[binder.pocketLayout] / cols
   const isToploader = binder.binderType === 'toploader'
 
   return (
-    <div className="flex flex-col gap-2 flex-1">
+    <div className="flex flex-col gap-2 flex-1 min-h-0">
       <div className="text-gray-600 text-xs text-center font-medium tracking-widest uppercase">{label}</div>
-      <div className={`flex-1 rounded-xl p-3 ${isToploader ? 'bg-gray-950 border-2 border-gray-700' : 'bg-gray-800 border border-gray-700'}`}>
+      <div className={`flex-1 min-h-0 overflow-hidden rounded-xl p-3 ${isToploader ? 'bg-gray-950 border-2 border-gray-700' : 'bg-gray-800 border border-gray-700'}`}>
         <div
-          className="grid gap-2 h-full"
-          style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, gridAutoRows: '1fr' }}
+          className="grid gap-2 h-full overflow-hidden"
+          style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)` }}
         >
           {page.slots.map((slot, idx) => {
             if (isMerged(slot)) return null

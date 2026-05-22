@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import type { BinderLayout, LibraryItem } from '../../types/binder'
 import { useBinderStore } from '../../store/useBinderStore'
 import { PocketGrid } from './PocketGrid'
@@ -13,6 +14,17 @@ export function PageSpread({ binder, library }: Props) {
   const addPage = useBinderStore(s => s.addPage)
 
   const pages = binder.pages
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (e.key === 'ArrowRight' && spreadIndex + 2 < pages.length) setSpreadIndex(spreadIndex + 2)
+      if (e.key === 'ArrowLeft' && spreadIndex > 0) setSpreadIndex(spreadIndex - 2)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [spreadIndex, pages.length, setSpreadIndex])
+
   const leftPage = pages[spreadIndex]
   const rightPage = pages[spreadIndex + 1]
   const totalSpreads = Math.ceil(pages.length / 2)
