@@ -22,6 +22,7 @@ interface BinderStore {
 
   // page reordering
   movePage: (pageId: string, direction: 'left' | 'right') => void
+  reorderPages: (orderedIds: string[]) => void
 
   // slot editing
   placeItem: (pageId: string, slotIndex: number, itemId: string) => void
@@ -78,6 +79,14 @@ export const useBinderStore = create<BinderStore>((set, _get) => ({
     if (newIdx < 0 || newIdx >= s.binder.pages.length) return s
     const pages = [...s.binder.pages]
     ;[pages[idx], pages[newIdx]] = [pages[newIdx], pages[idx]]
+    const binder = persist({ ...s.binder, pages })
+    return { binder }
+  }),
+
+  reorderPages: (orderedIds) => set(s => {
+    if (!s.binder) return s
+    const pageMap = new Map(s.binder.pages.map(p => [p.id, p]))
+    const pages = orderedIds.map(id => pageMap.get(id)).filter(Boolean) as import('../types/binder').BinderPage[]
     const binder = persist({ ...s.binder, pages })
     return { binder }
   }),

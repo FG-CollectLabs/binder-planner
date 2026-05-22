@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { BinderLayout, LibraryItem } from '../../types/binder'
 import { useBinderStore } from '../../store/useBinderStore'
 import { PocketGrid } from './PocketGrid'
+import { PageManagerModal } from './PageManagerModal'
 
 interface Props {
   binder: BinderLayout
@@ -13,6 +14,8 @@ export function PageSpread({ binder, library }: Props) {
   const setSpreadIndex = useBinderStore(s => s.setSpreadIndex)
   const addPage = useBinderStore(s => s.addPage)
   const movePage = useBinderStore(s => s.movePage)
+  const reorderPages = useBinderStore(s => s.reorderPages)
+  const [showManager, setShowManager] = useState(false)
 
   const pages = binder.pages
 
@@ -86,6 +89,13 @@ export function PageSpread({ binder, library }: Props) {
             Spread {currentSpread} / {totalSpreads}
           </span>
           <button
+            onClick={() => setShowManager(true)}
+            className="text-gray-400 hover:text-white text-sm px-2 py-1 rounded-lg hover:bg-gray-700 transition-colors"
+            title="Reorder pages"
+          >
+            ⚏
+          </button>
+          <button
             onClick={addPage}
             className="text-purple-400 hover:text-purple-300 text-sm px-2 py-1 rounded-lg hover:bg-gray-700 transition-colors"
           >
@@ -100,6 +110,15 @@ export function PageSpread({ binder, library }: Props) {
           Next →
         </button>
       </div>
+
+      {showManager && (
+        <PageManagerModal
+          binder={binder}
+          library={library}
+          onReorder={ids => reorderPages(ids)}
+          onClose={() => setShowManager(false)}
+        />
+      )}
     </div>
   )
 }
