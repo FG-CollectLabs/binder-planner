@@ -12,6 +12,7 @@ export function PageSpread({ binder, library }: Props) {
   const spreadIndex = useBinderStore(s => s.spreadIndex)
   const setSpreadIndex = useBinderStore(s => s.setSpreadIndex)
   const addPage = useBinderStore(s => s.addPage)
+  const movePage = useBinderStore(s => s.movePage)
 
   const pages = binder.pages
 
@@ -35,7 +36,13 @@ export function PageSpread({ binder, library }: Props) {
       {/* Pages */}
       <div className="flex gap-4 flex-1 min-h-0">
         {leftPage ? (
-          <PocketGrid page={leftPage} binder={binder} library={library} label={`Page ${spreadIndex + 1}`} />
+          <PocketGrid
+            page={leftPage} binder={binder} library={library} label={`Page ${spreadIndex + 1}`}
+            canMoveLeft={spreadIndex > 0}
+            canMoveRight={spreadIndex + 1 < pages.length - 1}
+            onMoveLeft={() => movePage(leftPage.id, 'left')}
+            onMoveRight={() => movePage(leftPage.id, 'right')}
+          />
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-600 text-sm">No page</div>
         )}
@@ -46,7 +53,13 @@ export function PageSpread({ binder, library }: Props) {
         </div>
 
         {rightPage ? (
-          <PocketGrid page={rightPage} binder={binder} library={library} label={`Page ${spreadIndex + 2}`} />
+          <PocketGrid
+            page={rightPage} binder={binder} library={library} label={`Page ${spreadIndex + 2}`}
+            canMoveLeft={spreadIndex + 1 > 0}
+            canMoveRight={spreadIndex + 2 < pages.length - 1}
+            onMoveLeft={() => movePage(rightPage.id, 'left')}
+            onMoveRight={() => movePage(rightPage.id, 'right')}
+          />
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <button

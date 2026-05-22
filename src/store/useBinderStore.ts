@@ -20,6 +20,9 @@ interface BinderStore {
   setSpreadIndex: (idx: number) => void
   addPage: () => void
 
+  // page reordering
+  movePage: (pageId: string, direction: 'left' | 'right') => void
+
   // slot editing
   placeItem: (pageId: string, slotIndex: number, itemId: string) => void
   removeItem: (pageId: string, slotIndex: number) => void
@@ -63,6 +66,18 @@ export const useBinderStore = create<BinderStore>((set, _get) => ({
     if (!s.binder) return s
     const page = emptyPage(s.binder.pocketLayout)
     const pages = [...s.binder.pages, page]
+    const binder = persist({ ...s.binder, pages })
+    return { binder }
+  }),
+
+  movePage: (pageId, direction) => set(s => {
+    if (!s.binder) return s
+    const idx = s.binder.pages.findIndex(p => p.id === pageId)
+    if (idx === -1) return s
+    const newIdx = direction === 'left' ? idx - 1 : idx + 1
+    if (newIdx < 0 || newIdx >= s.binder.pages.length) return s
+    const pages = [...s.binder.pages]
+    ;[pages[idx], pages[newIdx]] = [pages[newIdx], pages[idx]]
     const binder = persist({ ...s.binder, pages })
     return { binder }
   }),

@@ -8,9 +8,13 @@ interface Props {
   binder: BinderLayout
   library: LibraryItem[]
   label: string
+  canMoveLeft?: boolean
+  canMoveRight?: boolean
+  onMoveLeft?: () => void
+  onMoveRight?: () => void
 }
 
-export function PocketGrid({ page, binder, library, label }: Props) {
+export function PocketGrid({ page, binder, library, label, canMoveLeft, canMoveRight, onMoveLeft, onMoveRight }: Props) {
   const removeItem = useBinderStore(s => s.removeItem)
   const cycleSpan = useBinderStore(s => s.cycleSpan)
   const cols = LAYOUT_COLS[binder.pocketLayout]
@@ -18,7 +22,25 @@ export function PocketGrid({ page, binder, library, label }: Props) {
 
   return (
     <div className="flex flex-col gap-2 flex-1 min-h-0">
-      <div className="text-gray-500 text-xs text-center font-medium tracking-wide uppercase">{label}</div>
+      <div className="flex items-center justify-center gap-1">
+        <button
+          onClick={onMoveLeft}
+          disabled={!canMoveLeft}
+          title="Move page left"
+          className="text-gray-600 hover:text-gray-300 disabled:opacity-0 disabled:pointer-events-none text-xs px-1 transition-colors"
+        >
+          ‹
+        </button>
+        <span className="text-gray-500 text-xs font-medium tracking-wide uppercase">{label}</span>
+        <button
+          onClick={onMoveRight}
+          disabled={!canMoveRight}
+          title="Move page right"
+          className="text-gray-600 hover:text-gray-300 disabled:opacity-0 disabled:pointer-events-none text-xs px-1 transition-colors"
+        >
+          ›
+        </button>
+      </div>
       <div
         className={`
           bg-gray-800 border border-gray-700 rounded-xl p-3 flex-1 min-h-0 overflow-hidden
